@@ -1,4 +1,4 @@
-# FinanceiroAPI - 
+# FinanceiroAPI - Financial Control System
 A robust financial control system developed to demonstrate software architecture, data validation, and full stack integration skills.
 
 ## Technologies:
