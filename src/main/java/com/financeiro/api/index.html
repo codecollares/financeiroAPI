@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro Pro - Full Stack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-4 md:p-10">
+
+<div class="max-w-2xl mx-auto">
+    <header class="flex justify-between items-end mb-8 border-b border-gray-800 pb-6">
+        <div>
+            <h1 class="text-3xl font-extrabold text-blue-500">Financeiro<span class="text-white font-light">API</span></h1>
+            <p class="text-gray-400 text-sm">Controle de Fluxo de Caixa</p>
+        </div>
+        <div id="saldo-container" class="text-right">
+            <p class="text-gray-400 text-xs uppercase tracking-widest">Saldo Atual</p>
+            <div id="saldo-total" class="text-3xl font-mono font-bold text-green-400">R$ 0,00</div>
+        </div>
+    </header>
+
+    <section class="bg-gray-900 p-6 rounded-xl shadow-2xl mb-10 border border-gray-800">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <span class="mr-2">➕</span> Nova Transação
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input id="desc" type="text" placeholder="Descrição (ex: Aluguel)"
+                   class="bg-gray-800 border border-gray-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
+
+            <input id="valor" type="number" step="0.01" placeholder="Valor (ex: -1200.50)"
+                   class="bg-gray-800 border border-gray-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
+        </div>
+        <button onclick="enviarParaJava()"
+                class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all transform active:scale-95">
+            Salvar no Banco de Dados
+        </button>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <span class="mr-2">📊</span> Histórico Recente
+        </h2>
+        <div id="lista" class="space-y-3">
+            <div class="text-center py-10 text-gray-600">Carregando dados do servidor...</div>
+        </div>
+    </section>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/transacoes';
+
+    // 1. CARREGAR TRANSAÇÕES E CALCULAR SALDO
+    async function carregarTransacoes() {
+        try {
+            const resposta = await fetch(API_URL);
+            if (!resposta.ok) throw new Error();
+
+            const dados = await resposta.json();
+
+            let saldoTotal = 0;
+            const listaDiv = document.getElementById('lista');
+            listaDiv.innerHTML = "";
+
+            if (dados.length === 0) {
+                listaDiv.innerHTML = '<p class="text-gray-500 text-center">Nenhuma transação encontrada.</p>';
+            }
+
+            dados.forEach(t => {
+                saldoTotal += t.valor;
+                const corValor = t.valor >= 0 ? 'text-green-400' : 'text-red-400';
+                const borderSide = t.valor >= 0 ? 'border-green-500' : 'border-red-500';
+
+                listaDiv.innerHTML += `
+                        <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center border-l-4 ${borderSide} hover:bg-gray-800 transition shadow-sm">
+                            <div>
+                                <p class="font-bold text-gray-100">${t.descricao}</p>
+                                <p class="${corValor} font-mono font-semibold">R$ ${t.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            </div>
+                            <button onclick="deletar(${t.id})" class="bg-gray-800 hover:bg-red-900/40 p-2 rounded-full text-gray-500 hover:text-red-500 transition">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+            });
+
+            // Atualiza o Saldo no Topo
+            const saldoDiv = document.getElementById('saldo-total');
+            saldoDiv.innerText = `R$ ${saldoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            saldoDiv.className = `text-3xl font-mono font-bold ${saldoTotal >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+        } catch (erro) {
+            document.getElementById('lista').innerHTML = `<p class="text-red-500 text-center bg-red-900/20 p-4 rounded">ERRO: O Backend Java não está respondendo na porta 8080.</p>`;
+        }
+    }
+
+    // 2. ENVIAR PARA O JAVA (POST)
+    async function enviarParaJava() {
+        const descInput = document.getElementById('desc');
+        const valorInput = document.getElementById('valor');
+
+        const payload = {
+            descricao: descInput.value,
+            valor: parseFloat(valorInput.value)
+        };
+
+        try {
+            const resposta = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (resposta.ok) {
+                descInput.value = "";
+                valorInput.value = "";
+                carregarTransacoes(); // Recarrega a lista
+            } else {
+                const erroData = await resposta.json();
+                alert("Erro de Validação: Verifique se a descrição tem pelo menos 3 letras e o valor é válido.");
+            }
+        } catch (erro) {
+            alert("Erro crítico ao conectar no servidor!");
+        }
+    }
+
+    // 3. DELETAR TRANSAÇÃO (DELETE)
+    async function deletar(id) {
+        if (!confirm("Tem certeza que deseja excluir este registro?")) return;
+
+        try {
+            const resposta = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            if (resposta.ok) {
+                carregarTransacoes();
+            }
+        } catch (erro) {
+            alert("Erro ao tentar deletar.");
+        }
+    }
+
+    // Inicializar
+    carregarTransacoes();
+</script>
+</body>
+</html>
