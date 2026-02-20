@@ -1,17 +1,12 @@
-# FinanceiroAPI - Financial Control System
-A robust financial control system developed to demonstrate software architecture, data validation, and full stack integration skills.
+## FinanceiroAPI - Financial Control
 
-## Technologies:
-- **Backend:** Java 25 + Spring Boot 3
-- **Persistence:** Spring Data JPA + Banco de Dados H2
-- **Security/Validation:** Bean Validation (Jakarta Constraints)
-- **Frontend:** HTML5, Tailwind CSS e JavaScript (Fetch API)
-- **Containerization:** Docker
+A robust financial management system built to demonstrate solid software architecture and backend engineering. This project features a clean layered architecture (Controller, Service, Repository), strict data validation using Jakarta Constraints, CORS configuration for API consumption, and a reactive frontend that calculates balances dynamically.
 
-## Some methods and tools used:
-- **Code organization / planning / review:** Claude Opus 4.5 and Gemini Pro 3.1
-- **Layered architecture:** Clear separation between Controller, Service, and Repository.
-- **Business validation:** Use of `@Valid` and constraint annotations to ensure data integrity.
-- **CORS configured:** Backend prepared for consumption by different origins.
-- **Data seeding:** Automatic script to populate the database in a test environment.
-- **Reactive UX:** Interface that calculates balances and updates the DOM without the need for refresh.
+The main technologies and tools that I've used to create this were:
+- Java 25 & Spring Boot 3 (Backend)
+- Spring Data JPA & H2 Database (Persistence)
+- HTML5, Tailwind CSS & JavaScript Fetch API (Frontend)
+- Docker (Containerization)
+
+##
+*PS: I used Claude Opus 4.5 and Gemini Pro 3.1 for code review and planning. AI is a great pair-programmer, but making the frontend DOM update without a page refresh? That was all me!*
